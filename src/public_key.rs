@@ -7,6 +7,7 @@ use sha3::{
 };
 
 use crate::{
+    array_to_key,
     point::Point,
     private_key::PrivateKey,
     {shake256, Ed448Error, PreHash, KEY_LENGTH, SIG_LENGTH},
@@ -63,7 +64,7 @@ impl PublicKey {
         let A = Point::default()
             .decode(self.as_byte())
             .map_err(|_| Ed448Error::InvalidSignature)?;
-        if S >= Point::l() {
+        if &S >= Point::l() {
             return Err(Ed448Error::InvalidSignature);
         }
         // Calculate h.
@@ -117,9 +118,7 @@ impl TryFrom<&[u8]> for PublicKey {
         if value.len() != KEY_LENGTH {
             return Err(Ed448Error::WrongPublicKeyLength);
         }
-        let mut a = [0; KEY_LENGTH];
-        a.copy_from_slice(value);
-        Ok(PublicKey::from(a))
+        Ok(PublicKey::from(array_to_key(value)))
     }
 }
 
@@ -129,14 +128,8 @@ mod tests {
 
     use super::*;
 
-    fn init() {
-        let _ = env_logger::builder().is_test(true).try_init();
-    }
-
     #[test]
     fn test_vectors_rfc8032_public() {
-        init();
-
         let secret_vec = hex::decode(
             "6c82a562cb808d10d632be89c8513ebf\
                 6c929f34ddfa8c9f63c9960ef6e348a3\

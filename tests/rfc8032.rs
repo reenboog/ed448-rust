@@ -2,13 +2,8 @@ use std::convert::TryFrom;
 
 use ed448_rust::{PrivateKey, PublicKey};
 
-fn init() {
-    let _ = env_logger::builder().is_test(true).try_init();
-}
-
 #[test]
 fn ed448() {
-    init();
     vec![
         (
             "-----Blank",
@@ -83,7 +78,7 @@ fn ed448() {
             "e301345a41a39a4d72fff8df69c98075a0cc082b802fc9b2b6bc503f926b65bddf7f4c8f1cb49f6396afc8a70abe6d8aef0db478d4c6b2970076c6a0484fe76d76b3a97625d79f1ce240e7c576750d295528286f719b413de9ada3e8eb78ed573603ce30d8bb761785dc30dbc320869e1a00",
         ),
     ].iter().for_each(|(name, pkey, pub_key, msg, context, sig)| {
-        log::info!("Test: {}", name);
+        println!("Test: {}", name);
         let pkey = hex::decode(pkey).unwrap();
         let pub_key = hex::decode(pub_key).unwrap();
         let msg = hex::decode(msg).unwrap();
@@ -103,7 +98,6 @@ fn ed448() {
 
 #[test]
 fn ed448ph() {
-    init();
     vec![
         (
             "-----TEST abc",
@@ -122,7 +116,7 @@ fn ed448ph() {
             "c32299d46ec8ff02b54540982814dce9a05812f81962b649d528095916a2aa481065b1580423ef927ecf0af5888f90da0f6a9a85ad5dc3f280d91224ba9911a3653d00e484e2ce232521481c8658df304bb7745a73514cdb9bf3e15784ab71284f8d0704a608c54a6b62d97beb511d132100",
         ),
     ].iter().for_each(|(name, pkey, pub_key, msg, context, sig)| {
-        log::info!("Test: {}", name);
+        println!("Test: {}", name);
         let pkey = hex::decode(pkey).unwrap();
         let pub_key = hex::decode(pub_key).unwrap();
         let msg = hex::decode(msg).unwrap();

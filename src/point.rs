@@ -7,7 +7,7 @@ use lazy_static::lazy_static;
 use num_bigint::{BigInt, Sign};
 use num_traits::{One, Zero};
 
-use crate::{Ed448Error, KEY_LENGTH};
+use crate::{array_to_key, Ed448Error, KEY_LENGTH};
 
 lazy_static! {
     // 2 ^ 448 - 2 ^224 - 1
@@ -185,6 +185,7 @@ impl Div for Field {
     }
 }
 
+#[allow(clippy::suspicious_arithmetic_impl)]
 impl Div<&'_ Field> for Field {
     type Output = Self;
 
@@ -221,8 +222,8 @@ impl Point {
     }
 
     /// Order of basepoint.
-    pub fn l() -> BigInt {
-        l.clone()
+    pub fn l() -> &'static BigInt {
+        &l as &BigInt
     }
 
     pub fn new_stdbase() -> Self {
@@ -250,10 +251,9 @@ impl Point {
         let (xp, yp) = (self.x / &self.z, self.y / self.z);
 
         // Encode y.
-        let (_sign, mut tmp) = yp.0.to_bytes_le();
+        let mut tmp = yp.0.magnitude().to_bytes_le();
         tmp.resize_with(KEY_LENGTH, Default::default);
-        let mut s = [0; KEY_LENGTH];
-        s.clone_from_slice(&tmp);
+        let mut s = array_to_key(&tmp);
 
         // Add sign bit of x to encoding.
         if !xp.sign().is_zero() {
@@ -305,7 +305,7 @@ impl Point {
 impl Mul<&'_ BigInt> for Point {
     type Output = Self;
 
-    fn mul(mut self, x: &BigInt) -> Self {
+    fn mul(self, x: &BigInt) -> Self {
         self * x.clone()
     }
 }
