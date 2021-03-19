@@ -12,12 +12,13 @@ use crate::{
     SIG_LENGTH,
 };
 
-pub type PrivateKeyRaw = [u8; KEY_LENGTH];
-pub type SeedRaw = [u8; KEY_LENGTH];
+pub(crate) type PrivateKeyRaw = [u8; KEY_LENGTH];
+pub(crate) type SeedRaw = [u8; KEY_LENGTH];
 
 /// This represent a private key. **Must be kept secret.**
 ///
 /// Could be used to generate a new one or restore an older already saved.
+#[derive(Copy, Clone)]
 pub struct PrivateKey(PrivateKeyRaw);
 
 opaque_debug::implement!(PrivateKey);
@@ -28,7 +29,7 @@ impl PrivateKey {
     /// # Example
     ///
     /// ```
-    /// use rand_core::{RngCore, OsRng};
+    /// use rand_core::OsRng;
     /// use ed448_rust::PrivateKey;
     /// let private_key = PrivateKey::new(&mut OsRng);
     /// ```
@@ -46,7 +47,7 @@ impl PrivateKey {
     /// # Example
     ///
     /// ```
-    /// # use rand_core::{RngCore, OsRng};
+    /// # use rand_core::OsRng;
     /// # use ed448_rust::PrivateKey;
     /// # let private_key = PrivateKey::new(&mut OsRng);
     /// let exportable_pkey = private_key.as_bytes();
@@ -79,7 +80,7 @@ impl PrivateKey {
     /// Sign with key pair.
     ///
     /// It's possible to indicate a context. More information in
-    /// [RFC8032#8.3 Use of contexts](https://tools.ietf.org/html/rfc8032#section-8.3).
+    /// [RFC8032 8.3 Use of contexts](https://tools.ietf.org/html/rfc8032#section-8.3).
     ///
     /// # Examples
     ///
@@ -163,7 +164,7 @@ impl PrivateKey {
         let R = (Point::default() * &r).encode();
         // Calculate h.
         let h = shake256(
-            vec![&R, PublicKey::from(a.clone()).as_byte(), &msg],
+            vec![&R, &PublicKey::from(a.clone()).as_byte(), &msg],
             ctx,
             pre_hash,
         );
@@ -181,22 +182,22 @@ impl PrivateKey {
     }
 }
 
+/// Restore the private key from the slice.
 impl From<PrivateKeyRaw> for PrivateKey {
-    /// Restore the private key from the slice.
     fn from(array: PrivateKeyRaw) -> Self {
         Self(array)
     }
 }
 
+/// Restore the private key from an array.
+///
+/// # Error
+///
+/// Could return [`Ed448Error::WrongKeyLength`] if the array's length
+/// is not [`KEY_LENGTH`].
 impl TryFrom<&'_ [u8]> for PrivateKey {
     type Error = Ed448Error;
 
-    /// Restore the private key from an array.
-    ///
-    /// # Error
-    ///
-    /// Could return [`Ed448Error::WrongKeyLength`] if the array's length
-    /// is not [`KEY_LENGTH`].
     fn try_from(bytes: &[u8]) -> crate::Result<Self> {
         if bytes.len() != KEY_LENGTH {
             return Err(Ed448Error::WrongKeyLength);

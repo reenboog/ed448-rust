@@ -194,6 +194,14 @@ impl Div<&'_ Field> for Field {
     }
 }
 
+impl Div<&'_ Field> for &'_ Field {
+    type Output = Field;
+
+    fn div(self, other: &'_ Field) -> Field {
+        self.clone() / other
+    }
+}
+
 impl fmt::Display for Field {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&format!("Field {{ {} }}", self.0))
@@ -247,8 +255,8 @@ impl Point {
     }
 
     /// Encode a point representation.
-    pub fn encode(self) -> [u8; KEY_LENGTH] {
-        let (xp, yp) = (self.x / &self.z, self.y / self.z);
+    pub fn encode(&self) -> [u8; KEY_LENGTH] {
+        let (xp, yp) = (&self.x / &self.z, &self.y / &self.z);
 
         // Encode y.
         let mut tmp = yp.0.magnitude().to_bytes_le();

@@ -7,22 +7,22 @@ use sha3::{
 };
 
 use crate::{
-    array_to_key,
     point::Point,
     private_key::PrivateKey,
     {shake256, Ed448Error, PreHash, KEY_LENGTH, SIG_LENGTH},
 };
 
 /// This is a public key. _Should be distributed._
-pub struct PublicKey(PublicKeyRaw);
-
-pub type PublicKeyRaw = [u8; KEY_LENGTH];
+#[derive(Clone)]
+pub struct PublicKey(Point);
 
 opaque_debug::implement!(PublicKey);
 
 impl PublicKey {
-    pub fn as_byte(&self) -> &PublicKeyRaw {
-        &self.0
+    /// Convert the public key to an easily exportable format.
+    pub fn as_byte(&self) -> [u8; 57] {
+        // 4.  The public key A is the encoding of the point [s]B.
+        self.0.encode()
     }
 
     /// Verify signature with public key.
@@ -63,13 +63,13 @@ impl PublicKey {
         );
         // Parse public key.
         let A = Point::default()
-            .decode(self.as_byte())
+            .decode(&self.as_byte())
             .map_err(|_| Ed448Error::InvalidSignature)?;
         if &S >= Point::l() {
             return Err(Ed448Error::InvalidSignature);
         }
         // Calculate h.
-        let h = shake256(vec![Rraw, self.as_byte(), &msg], ctx, pre_hash);
+        let h = shake256(vec![Rraw, &self.as_byte(), &msg], ctx, pre_hash);
         let h = BigInt::from_bytes_le(Sign::Plus, &h) % Point::l();
         // Calculate left and right sides of check eq.
         let mut rhs = R + (A * h);
@@ -102,24 +102,30 @@ impl From<BigInt> for PublicKey {
         let A = Point::default() * s;
 
         // 4.  The public key A is the encoding of the point [s]B.
-        PublicKey(A.encode())
+        PublicKey(A)
     }
 }
 
 impl From<[u8; KEY_LENGTH]> for PublicKey {
     fn from(array: [u8; KEY_LENGTH]) -> Self {
-        Self(array)
+        Self::from(BigInt::from_bytes_le(Sign::Plus, &array))
+    }
+}
+
+impl From<&'_ [u8; KEY_LENGTH]> for PublicKey {
+    fn from(array: &'_ [u8; KEY_LENGTH]) -> Self {
+        Self::from(BigInt::from_bytes_le(Sign::Plus, array))
     }
 }
 
 impl TryFrom<&[u8]> for PublicKey {
     type Error = Ed448Error;
 
-    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        if value.len() != KEY_LENGTH {
+    fn try_from(array: &[u8]) -> Result<Self, Self::Error> {
+        if array.len() != KEY_LENGTH {
             return Err(Ed448Error::WrongPublicKeyLength);
         }
-        Ok(PublicKey::from(array_to_key(value)))
+        Ok(Self::from(BigInt::from_bytes_le(Sign::Plus, array)))
     }
 }
 

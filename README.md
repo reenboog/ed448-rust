@@ -15,7 +15,7 @@ as it_
 
 ```rust
 use core::convert::TryFrom;
-use rand_core::{RngCore, OsRng};
+use rand_core::OsRng;
 use ed448_rust::{PrivateKey, PublicKey};
 
 fn main () {

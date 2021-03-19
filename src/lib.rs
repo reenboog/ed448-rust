@@ -1,6 +1,21 @@
 #![feature(external_doc)]
 #![allow(non_snake_case, non_upper_case_globals)]
 #![deny(
+    missing_docs,
+    missing_copy_implementations,
+    missing_debug_implementations,
+    trivial_numeric_casts,
+    unreachable_pub,
+    unsafe_code,
+    unused_extern_crates,
+    unused_qualifications
+)]
+#![doc(
+    test(no_crate_inject, attr(deny(warnings))),
+    test(attr(allow(unused_variables))),
+    html_no_source
+)]
+#![deny(
     clippy::absurd_extreme_comparisons,
     clippy::almost_swapped,
     clippy::approx_constant,
@@ -73,6 +88,85 @@
     clippy::wrong_transmute,
     clippy::zst_offset
 )]
+
+//! # EdDSA implementation for ed448
+//!
+//! This is a Edwards-Curve Digital Signature Algorithm (EdDSA) for ed448 only
+//! in pure rust.
+//!
+//! # Usage
+//!
+//! There is two variants that can be combined to sign/verify:
+//!
+//! 1. [`PrivateKey::sign`](crate::PrivateKey::sign) to sign all the content
+//!    as-it and [`PrivateKey::sign_ph`](crate::PrivateKey::sign_ph) to
+//!    pre-hash the message internaly before signing it. It will be hashed
+//!    using Shake256 and the result of 64 byte will be signed/verified.
+//!    
+//!    Note: use the same variant for verifying the signature.
+//!
+//! 2. The second parameter of [`sign`](crate::PrivateKey::sign)/
+//!    [`sign_ph`](crate::PrivateKey::sign_ph) and the third of
+//!    [`verify`](crate::PublicKey::verify)/
+//!    [`verify_ph`](crate::PublicKey::verify_ph) if an optional context
+//!    of 255 byte length max.
+//!    
+//!    The context can be used to facilitate different signature over
+//!    different protocol, but it must be immuable over the protocol.
+//!    More information about this can be found at
+//!    [RFC 8032 Use of Contexts](https://tools.ietf.org/html/rfc8032#section-8.3).
+//!
+//! # Examples
+//!
+//! ## Generating a new key pair
+//!
+//! ```
+//! use rand_core::OsRng;
+//! use ed448_rust::{PrivateKey, PublicKey};
+//! let private_key = PrivateKey::new(&mut OsRng);
+//! let public_key = PublicKey::from(&private_key);
+//! ```
+//!
+//! ## Sign a message
+//!
+//! ```
+//! # use rand_core::OsRng;
+//! use ed448_rust::{PrivateKey, Ed448Error};
+//! # let retrieve_pkey = || PrivateKey::new(&mut OsRng);
+//! let message = b"Message to sign";
+//! let private_key = retrieve_pkey();
+//! match private_key.sign(message, None) {
+//!     Ok(signature) => {
+//!         // Signature OK, use it
+//!         // This is a slice of 144 byte length
+//!     }
+//!     Err(Ed448Error::ContextTooLong) => {
+//!         // The used context is more than 255 bytes length
+//!     }
+//!     Err(_) => unreachable!()
+//! }
+//! ```
+//!
+//! ## Verify a signature
+//!
+//! ```
+//! # use rand_core::OsRng;
+//! use ed448_rust::{PublicKey, Ed448Error};
+//! # let private_key = ed448_rust::PrivateKey::new(&mut OsRng);
+//! let message = b"Signed message to verify";
+//! # let signature = private_key.sign(message, None).unwrap();
+//! # let retrieve_pubkey = || PublicKey::from(&private_key);
+//! let public_key = retrieve_pubkey();
+//! match public_key.verify(message, &signature, None) {
+//!     Ok(()) => {
+//!         // Signature OK, use the message
+//!     }
+//!     Err(Ed448Error::InvalidSignature) => {
+//!         // The verification of the signature is invalid
+//!     }
+//!     Err(_) => unreachable!()
+//! }
+//! ```
 use sha3::{
     digest::{ExtendableOutput, Update},
     Shake256,
@@ -131,6 +225,7 @@ fn shake256(items: Vec<&[u8]>, ctx: &[u8], pre_hash: PreHash) -> Box<[u8]> {
 }
 
 fn array_to_key(byte: &[u8]) -> [u8; KEY_LENGTH] {
-    let key: *const [u8; KEY_LENGTH] = byte.as_ptr() as *const [u8; KEY_LENGTH];
-    unsafe { std::mem::transmute(*key) }
+    let mut key = [0; KEY_LENGTH];
+    key.copy_from_slice(byte);
+    key
 }
