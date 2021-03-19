@@ -13,6 +13,7 @@ use crate::{
     {shake256, Ed448Error, PreHash, KEY_LENGTH, SIG_LENGTH},
 };
 
+/// This is a public key. _Should be distributed._
 pub struct PublicKey(PublicKeyRaw);
 
 pub type PublicKeyRaw = [u8; KEY_LENGTH];

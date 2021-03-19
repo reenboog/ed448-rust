@@ -92,9 +92,12 @@ mod public_key;
 #[cfg(doctest)]
 pub struct ReadmeDoctests;
 
+/// Specialized [`Result`](core::result::Result) for this crate.
 pub type Result<T> = core::result::Result<T, Ed448Error>;
 
+/// Length of either a public or a private key length in byte.
 pub const KEY_LENGTH: usize = 57;
+/// Length of the signature length in byte.
 pub const SIG_LENGTH: usize = 114;
 
 /// Indicate if the message need to be pre-hashed before being signed/verified

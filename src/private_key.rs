@@ -15,6 +15,9 @@ use crate::{
 pub type PrivateKeyRaw = [u8; KEY_LENGTH];
 pub type SeedRaw = [u8; KEY_LENGTH];
 
+/// This represent a private key. **Must be kept secret.**
+///
+/// Could be used to generate a new one or restore an older already saved.
 pub struct PrivateKey(PrivateKeyRaw);
 
 opaque_debug::implement!(PrivateKey);
@@ -120,7 +123,7 @@ impl PrivateKey {
     ///
     /// # Error
     ///
-    /// It could return `[Ed448Error::ContextTooLong]` if the context is more than
+    /// It could return [`Ed448Error::ContextTooLong`] if the context is more than
     /// 255 byte length.
     pub fn sign(&self, msg: &[u8], ctx: Option<&[u8]>) -> crate::Result<[u8; SIG_LENGTH]> {
         self.sign_real(msg, ctx, PreHash::False)
@@ -131,7 +134,7 @@ impl PrivateKey {
     /// The message is hashed before being signed. The size of the signed message in this
     /// case is always 64 bytes length.
     ///
-    /// See `[PrivateKey::sign]`
+    /// See [`PrivateKey::sign`].
     pub fn sign_ph(&self, msg: &[u8], ctx: Option<&[u8]>) -> crate::Result<[u8; SIG_LENGTH]> {
         self.sign_real(msg, ctx, PreHash::True)
     }
@@ -192,8 +195,8 @@ impl TryFrom<&'_ [u8]> for PrivateKey {
     ///
     /// # Error
     ///
-    /// Could return `[Ed448Error::WrongKeyLength]` if the array's length
-    /// is not `[KEY_LENGTH]`.
+    /// Could return [`Ed448Error::WrongKeyLength`] if the array's length
+    /// is not [`KEY_LENGTH`].
     fn try_from(bytes: &[u8]) -> crate::Result<Self> {
         if bytes.len() != KEY_LENGTH {
             return Err(Ed448Error::WrongKeyLength);

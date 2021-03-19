@@ -264,10 +264,6 @@ impl Point {
 
     /// Decode a point representation.
     pub fn decode(self, s: &[u8]) -> crate::Result<Point> {
-        // Check that point encoding is the correct length.
-        if s.len() != KEY_LENGTH {
-            return Err(Ed448Error::WrongEncodedPointLength);
-        }
         // Extract signbit.
         let xs = BigInt::from(s[56] >> 7);
         // Decode y.  If this fails, fail.
