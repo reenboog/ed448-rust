@@ -177,4 +177,14 @@ mod tests {
         let pub_key = PublicKey::try_from(&[0x01_u8][..]);
         assert_eq!(pub_key.unwrap_err(), Ed448Error::WrongPublicKeyLength);
     }
+
+    #[test]
+    fn instantiate_pubkey() {
+        let pkey = PrivateKey::new(&mut OsRng);
+        let pkey_slice = *pkey.as_bytes();
+        let pub_key1 = PublicKey::from(&pkey_slice);
+        let pub_key2 = PublicKey::from(pkey_slice);
+
+        assert_eq!(pub_key1.as_byte(), pub_key2.as_byte());
+    }
 }

@@ -218,14 +218,14 @@ pub struct Point {
 impl Point {
     pub fn new(x: &Field, y: &Field) -> crate::Result<Self> {
         // Check that the point is actually on the curve.
-        if y * y + x * x != (&f1 as &Field) + &((&d as &Field) * x * x * y * y) {
-            Err(Ed448Error::InvalidPoint)
-        } else {
+        if y * y + x * x == (&f1 as &Field) + &((&d as &Field) * x * x * y * y) {
             Ok(Self {
                 x: x.clone(),
                 y: y.clone(),
                 ..Default::default()
             })
+        } else {
+            Err(Ed448Error::InvalidPoint)
         }
     }
 

@@ -1,5 +1,4 @@
 #![feature(external_doc)]
-#![allow(non_snake_case, non_upper_case_globals)]
 #![deny(
     missing_docs,
     missing_doc_code_examples,
@@ -9,7 +8,14 @@
     unreachable_pub,
     unsafe_code,
     unused_extern_crates,
-    unused_qualifications
+    unused_qualifications,
+    single_use_lifetimes,
+    unused_import_braces,
+    unused_lifetimes,
+    unused_results,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery
 )]
 #![doc(
     test(no_crate_inject, attr(deny(warnings))),
@@ -88,6 +94,12 @@
     clippy::while_immutable_condition,
     clippy::wrong_transmute,
     clippy::zst_offset
+)]
+#![allow(
+    non_snake_case,
+    non_upper_case_globals,
+    clippy::similar_names,
+    clippy::module_name_repetitions
 )]
 
 //! # EdDSA implementation for ed448
