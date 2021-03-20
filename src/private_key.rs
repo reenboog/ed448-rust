@@ -8,8 +8,7 @@ use sha3::{
 };
 
 use crate::{
-    array_to_key, point::Point, public_key::PublicKey, shake256, Ed448Error, PreHash, KEY_LENGTH,
-    SIG_LENGTH,
+    array_to_key, point::Point, shake256, Ed448Error, PreHash, PublicKey, KEY_LENGTH, SIG_LENGTH,
 };
 
 pub(crate) type PrivateKeyRaw = [u8; KEY_LENGTH];
@@ -209,5 +208,25 @@ impl TryFrom<&'_ [u8]> for PrivateKey {
 impl From<&'_ PrivateKeyRaw> for PrivateKey {
     fn from(bytes: &PrivateKeyRaw) -> Self {
         PrivateKey::from(*bytes)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rand_core::OsRng;
+
+    #[test]
+    fn invalid_key_len() {
+        let invalid_pk = PrivateKey::try_from(&[0x01_u8][..]);
+        assert_eq!(invalid_pk.unwrap_err(), Ed448Error::WrongKeyLength);
+    }
+
+    #[test]
+    fn invalid_context_length() {
+        let pkey = PrivateKey::new(&mut OsRng);
+        let ctx = [0; 256];
+        let invalid_sig = pkey.sign(b"message", Some(&ctx));
+        assert_eq!(invalid_sig.unwrap_err(), Ed448Error::ContextTooLong);
     }
 }

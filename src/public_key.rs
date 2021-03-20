@@ -13,6 +13,8 @@ use crate::{
 };
 
 /// This is a public key. _Should be distributed._
+///
+/// You can extract a `PublicKey` by calling [`Self::from()`].
 #[derive(Clone)]
 pub struct PublicKey(Point);
 
@@ -87,6 +89,7 @@ impl PublicKey {
     }
 }
 
+/// Instantiate a `PublicKey` from the `PrivateKey`.
 impl From<&PrivateKey> for PublicKey {
     fn from(private_key: &PrivateKey) -> Self {
         let (s, _) = &private_key.expand();
@@ -96,6 +99,8 @@ impl From<&PrivateKey> for PublicKey {
     }
 }
 
+/// Do not use, it's for internal use only to generate the PublicKey
+#[doc(hidden)]
 impl From<BigInt> for PublicKey {
     fn from(s: BigInt) -> Self {
         //     Perform a known-base-point scalar multiplication [s]B.
@@ -134,21 +139,18 @@ mod tests {
     use std::convert::TryFrom;
 
     use super::*;
+    use rand_core::OsRng;
 
     #[test]
     fn test_vectors_rfc8032_public() {
         let secret_vec = hex::decode(
-            "6c82a562cb808d10d632be89c8513ebf\
-                6c929f34ddfa8c9f63c9960ef6e348a3\
-                528c8a3fcc2f044e39a3fc5b94492f8f\
-                032e7549a20098f95b",
+            "6c82a562cb808d10d632be89c8513ebf6c929f34ddfa8c9f63c9960ef6e348a3\
+                528c8a3fcc2f044e39a3fc5b94492f8f032e7549a20098f95b",
         )
         .unwrap();
         let ref_public = hex::decode(
-            "5fd7449b59b461fd2ce787ec616ad46a\
-                1da1342485a70e1f8a0ea75d80e96778\
-                edf124769b46c7061bd6783df1e50f6c\
-                d1fa1abeafe8256180",
+            "5fd7449b59b461fd2ce787ec616ad46a1da1342485a70e1f8a0ea75d80e96778\
+                edf124769b46c7061bd6783df1e50f6cd1fa1abeafe8256180",
         )
         .unwrap();
 
@@ -156,5 +158,23 @@ mod tests {
         let public = PublicKey::from(&secret);
 
         assert_eq!(&public.as_byte()[..], &ref_public[..]);
+    }
+
+    #[test]
+    fn wrong_verification() {
+        let secret_1 = PrivateKey::new(&mut OsRng);
+        let msg = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec nec.";
+        let sig_1 = secret_1.sign(msg, None).unwrap();
+        let public_2 = PublicKey::from(&PrivateKey::new(&mut OsRng));
+        assert_eq!(
+            public_2.verify(msg, &sig_1, None).unwrap_err(),
+            Ed448Error::InvalidSignature
+        );
+    }
+
+    #[test]
+    fn wrong_pubkey_length() {
+        let pub_key = PublicKey::try_from(&[0x01_u8][..]);
+        assert_eq!(pub_key.unwrap_err(), Ed448Error::WrongPublicKeyLength);
     }
 }

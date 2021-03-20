@@ -5,7 +5,7 @@ from the [RFC8032](https://tools.ietf.org/html/rfc8032) in pure Rust,
 but only the ed448 support is implemented.
 
 _This is direct port of the Python code in the RFC, so it's the same warning
-as it_
+as it:_
 
 > **Note: This code is not intended for production.  Although it should**
 > **produce correct results for every input, it is slow and makes no**
@@ -50,4 +50,6 @@ fn main () {
 }
 ```
 
-##
+## License
+
+This code is licensed under MIT / Apache2.0

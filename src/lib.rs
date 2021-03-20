@@ -2,6 +2,7 @@
 #![allow(non_snake_case, non_upper_case_globals)]
 #![deny(
     missing_docs,
+    missing_doc_code_examples,
     missing_copy_implementations,
     missing_debug_implementations,
     trivial_numeric_casts,

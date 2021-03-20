@@ -1,5 +1,5 @@
 /// Errors of this crate
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Ed448Error {
     /// The provided array is not in the correct length for the private key.
     ///
