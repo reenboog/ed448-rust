@@ -217,6 +217,7 @@ enum PreHash {
 }
 
 impl From<PreHash> for u8 {
+    #[inline]
     fn from(hash: PreHash) -> Self {
         match hash {
             PreHash::False => 0,

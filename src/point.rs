@@ -58,6 +58,7 @@ impl Field {
     }
 
     /// Field inverse (inverse of 0 is 0).
+    #[inline]
     pub fn inv(self) -> Self {
         Self::new(self.0.modpow(&(&p as &BigInt - 2), &p))
     }
@@ -65,6 +66,7 @@ impl Field {
     /// Compute sign of number, 0 or 1.  The sign function
     /// has the following property:
     /// sign(x) = 1 - sign(-x) if x != 0.
+    #[inline]
     pub fn sign(&self) -> BigInt {
         &self.0 % 2
     }
@@ -86,12 +88,14 @@ impl Field {
     }
 
     /// Is the field element the additive identity?
+    #[inline]
     pub fn is_zero(&self) -> bool {
-        self.0 == BigInt::zero()
+        self.0.is_zero()
     }
 }
 
 impl PartialEq for Field {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.0 == other.0
     }
@@ -100,6 +104,7 @@ impl PartialEq for Field {
 impl Add for Field {
     type Output = Self;
 
+    #[inline]
     fn add(self, other: Self) -> Self {
         self + &other
     }
@@ -108,6 +113,7 @@ impl Add for Field {
 impl Add<&'_ Field> for Field {
     type Output = Self;
 
+    #[inline]
     fn add(self, rhs: &Self) -> Self {
         Self::new(self.0 + &rhs.0)
     }
@@ -116,6 +122,7 @@ impl Add<&'_ Field> for Field {
 impl Add<&'_ Field> for &'_ Field {
     type Output = Field;
 
+    #[inline]
     fn add(self, other: &Field) -> Self::Output {
         self.clone() + other
     }
@@ -124,6 +131,7 @@ impl Add<&'_ Field> for &'_ Field {
 impl Sub for Field {
     type Output = Self;
 
+    #[inline]
     fn sub(self, other: Self) -> Self {
         self - &other
     }
@@ -132,6 +140,7 @@ impl Sub for Field {
 impl Sub<&'_ Field> for Field {
     type Output = Self;
 
+    #[inline]
     fn sub(self, other: &Self) -> Self {
         Self::new(self.0 + &p as &BigInt - &other.0)
     }
@@ -140,6 +149,7 @@ impl Sub<&'_ Field> for Field {
 impl Sub<&'_ Field> for &'_ Field {
     type Output = Field;
 
+    #[inline]
     fn sub(self, other: &Field) -> Field {
         self.clone() - other
     }
@@ -148,6 +158,7 @@ impl Sub<&'_ Field> for &'_ Field {
 impl Mul for Field {
     type Output = Self;
 
+    #[inline]
     fn mul(self, other: Self) -> Self {
         self * &other
     }
@@ -156,6 +167,7 @@ impl Mul for Field {
 impl Mul<&'_ Field> for Field {
     type Output = Self;
 
+    #[inline]
     fn mul(self, other: &Self) -> Self {
         Self::new(self.0 * &other.0)
     }
@@ -164,6 +176,7 @@ impl Mul<&'_ Field> for Field {
 impl Mul<&'_ Field> for &'_ Field {
     type Output = Field;
 
+    #[inline]
     fn mul(self, other: &Field) -> Field {
         self.clone() * other
     }
@@ -172,6 +185,7 @@ impl Mul<&'_ Field> for &'_ Field {
 impl Neg for Field {
     type Output = Self;
 
+    #[inline]
     fn neg(self) -> Self {
         Self::new(&p as &BigInt - self.0)
     }
@@ -180,6 +194,7 @@ impl Neg for Field {
 impl Div for Field {
     type Output = Self;
 
+    #[inline]
     fn div(self, other: Self) -> Self {
         self / &other
     }
@@ -189,6 +204,7 @@ impl Div for Field {
 impl Div<&'_ Field> for Field {
     type Output = Self;
 
+    #[inline]
     fn div(self, other: &Self) -> Self {
         self * other.clone().inv()
     }
@@ -197,6 +213,7 @@ impl Div<&'_ Field> for Field {
 impl Div<&'_ Field> for &'_ Field {
     type Output = Field;
 
+    #[inline]
     fn div(self, other: &'_ Field) -> Field {
         self.clone() / other
     }
@@ -230,10 +247,12 @@ impl Point {
     }
 
     /// Order of basepoint.
+    #[inline]
     pub fn l() -> &'static BigInt {
         &l as &BigInt
     }
 
+    #[inline]
     pub fn new_stdbase() -> Self {
         Self::new(&f0, &f1).unwrap()
     }
@@ -301,6 +320,7 @@ impl Point {
     }
 
     /// Solve for x^2.
+    #[inline]
     fn solve_x2(self, y: &Field) -> Field {
         (y * y - &f1 as &Field) / (&d as &Field * y * y - &f1 as &Field)
     }
@@ -309,6 +329,7 @@ impl Point {
 impl Mul<&'_ BigInt> for Point {
     type Output = Self;
 
+    #[inline]
     fn mul(self, x: &BigInt) -> Self {
         self * x.clone()
     }
@@ -354,6 +375,7 @@ impl Add for Point {
 impl Add<&'_ Point> for Point {
     type Output = Self;
 
+    #[inline]
     fn add(self, other: &Point) -> Self {
         self + other.clone()
     }
@@ -362,6 +384,7 @@ impl Add<&'_ Point> for Point {
 impl Add<&'_ Point> for &'_ Point {
     type Output = Point;
 
+    #[inline]
     fn add(self, other: &Point) -> Point {
         self.clone() + other.clone()
     }
@@ -380,6 +403,7 @@ impl PartialEq<Point> for Point {
 }
 
 impl Default for Point {
+    #[inline]
     fn default() -> Self {
         Self {
             x: xb.clone(),

@@ -22,17 +22,20 @@ opaque_debug::implement!(PublicKey);
 
 impl PublicKey {
     /// Convert the public key to an easily exportable format.
+    #[inline]
     pub fn as_byte(&self) -> [u8; 57] {
         // 4.  The public key A is the encoding of the point [s]B.
         self.0.encode()
     }
 
     /// Verify signature with public key.
+    #[inline]
     pub fn verify(&self, msg: &[u8], sign: &[u8], ctx: Option<&[u8]>) -> crate::Result<()> {
         self.verify_real(msg, sign, ctx, PreHash::False)
     }
 
     /// Verify signature with public key. Message is pre-hashed before checked.
+    #[inline]
     pub fn verify_ph(&self, msg: &[u8], sign: &[u8], ctx: Option<&[u8]>) -> crate::Result<()> {
         self.verify_real(msg, sign, ctx, PreHash::True)
     }
@@ -91,6 +94,7 @@ impl PublicKey {
 
 /// Instantiate a `PublicKey` from the `PrivateKey`.
 impl From<&PrivateKey> for PublicKey {
+    #[inline]
     fn from(private_key: &PrivateKey) -> Self {
         let (s, _) = &private_key.expand();
         // 3.  Interpret the buffer as the little-endian integer, forming a
@@ -102,6 +106,7 @@ impl From<&PrivateKey> for PublicKey {
 /// Do not use, it's for internal use only to generate the PublicKey
 #[doc(hidden)]
 impl From<BigInt> for PublicKey {
+    #[inline]
     fn from(s: BigInt) -> Self {
         //     Perform a known-base-point scalar multiplication [s]B.
         let A = Point::default() * s;
@@ -112,12 +117,14 @@ impl From<BigInt> for PublicKey {
 }
 
 impl From<[u8; KEY_LENGTH]> for PublicKey {
+    #[inline]
     fn from(array: [u8; KEY_LENGTH]) -> Self {
         Self::from(BigInt::from_bytes_le(Sign::Plus, &array))
     }
 }
 
 impl From<&'_ [u8; KEY_LENGTH]> for PublicKey {
+    #[inline]
     fn from(array: &'_ [u8; KEY_LENGTH]) -> Self {
         Self::from(BigInt::from_bytes_le(Sign::Plus, array))
     }
@@ -126,6 +133,7 @@ impl From<&'_ [u8; KEY_LENGTH]> for PublicKey {
 impl TryFrom<&[u8]> for PublicKey {
     type Error = Ed448Error;
 
+    #[inline]
     fn try_from(array: &[u8]) -> Result<Self, Self::Error> {
         if array.len() != KEY_LENGTH {
             return Err(Ed448Error::WrongPublicKeyLength);
@@ -161,7 +169,7 @@ mod tests {
     }
 
     #[test]
-    fn wrong_verification() {
+    fn wrong_verification_with_another_pub_key() {
         let secret_1 = PrivateKey::new(&mut OsRng);
         let msg = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec nec.";
         let sig_1 = secret_1.sign(msg, None).unwrap();

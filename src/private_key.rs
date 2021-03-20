@@ -51,6 +51,7 @@ impl PrivateKey {
     /// # let private_key = PrivateKey::new(&mut OsRng);
     /// let exportable_pkey = private_key.as_bytes();
     /// ```
+    #[inline]
     pub fn as_bytes(&self) -> &[u8; KEY_LENGTH] {
         &self.0
     }
@@ -125,6 +126,7 @@ impl PrivateKey {
     ///
     /// It could return [`Ed448Error::ContextTooLong`] if the context is more than
     /// 255 byte length.
+    #[inline]
     pub fn sign(&self, msg: &[u8], ctx: Option<&[u8]>) -> crate::Result<[u8; SIG_LENGTH]> {
         self.sign_real(msg, ctx, PreHash::False)
     }
@@ -135,6 +137,7 @@ impl PrivateKey {
     /// case is always 64 bytes length.
     ///
     /// See [`PrivateKey::sign`].
+    #[inline]
     pub fn sign_ph(&self, msg: &[u8], ctx: Option<&[u8]>) -> crate::Result<[u8; SIG_LENGTH]> {
         self.sign_real(msg, ctx, PreHash::True)
     }
@@ -183,6 +186,7 @@ impl PrivateKey {
 
 /// Restore the private key from the slice.
 impl From<PrivateKeyRaw> for PrivateKey {
+    #[inline]
     fn from(array: PrivateKeyRaw) -> Self {
         Self(array)
     }
@@ -206,6 +210,7 @@ impl TryFrom<&'_ [u8]> for PrivateKey {
 }
 
 impl From<&'_ PrivateKeyRaw> for PrivateKey {
+    #[inline]
     fn from(bytes: &PrivateKeyRaw) -> Self {
         PrivateKey::from(*bytes)
     }
