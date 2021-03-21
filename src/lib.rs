@@ -179,6 +179,7 @@
 //!     Err(_) => unreachable!()
 //! }
 //! ```
+
 use sha3::{
     digest::{ExtendableOutput, Update},
     Shake256,

@@ -195,4 +195,44 @@ mod tests {
 
         assert_eq!(pub_key1.as_byte(), pub_key2.as_byte());
     }
+
+    #[test]
+    fn wrong_with_altered_message() {
+        let secret = PrivateKey::new(&mut OsRng);
+        let public = PublicKey::from(&PrivateKey::new(&mut OsRng));
+        let msg_1 = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec nec.";
+        // One dot missing at the end
+        let msg_2 = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec nec";
+        let sig = secret.sign(msg_1, None).unwrap();
+        assert_eq!(
+            public.verify(msg_2, &sig, None).unwrap_err(),
+            Ed448Error::InvalidSignature
+        );
+    }
+
+    #[test]
+    fn wrong_with_forged_pub_key() {
+        let secret = PrivateKey::new(&mut OsRng);
+        let public = PublicKey::from(&[150; KEY_LENGTH]);
+        let msg = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec nec.";
+        // One dot missing at the end
+        let sig = secret.sign(msg, None).unwrap();
+        assert_eq!(
+            public.verify(msg, &sig, None).unwrap_err(),
+            Ed448Error::InvalidSignature
+        );
+    }
+
+    #[test]
+    fn wrong_with_forged_signature() {
+        let secret = PrivateKey::new(&mut OsRng);
+        let public = PublicKey::from(&secret);
+        let msg = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec nec.";
+        // One dot missing at the end
+        let sig = [1; SIG_LENGTH];
+        assert_eq!(
+            public.verify(msg, &sig, None).unwrap_err(),
+            Ed448Error::InvalidSignature
+        );
+    }
 }
