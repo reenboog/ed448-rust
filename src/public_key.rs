@@ -70,14 +70,10 @@ impl PublicKey {
         let h = shake256(vec![Rraw, &self.as_byte(), &msg], ctx.as_ref(), pre_hash);
         let h = BigInt::from_bytes_le(Sign::Plus, &h) % Point::l();
         // Calculate left and right sides of check eq.
-        let mut rhs = R + (A * h);
-        let mut lhs = Point::default() * S;
-        for _ in 0..2 {
-            lhs = lhs.double();
-            rhs = rhs.double();
-        }
+        let rhs = R + (A * h);
+        let lhs = Point::default() * S;
         // Check eq. holds?
-        if lhs == rhs {
+        if lhs.double().double() == rhs.double().double() {
             Ok(())
         } else {
             Err(Ed448Error::InvalidSignature)
@@ -206,7 +202,7 @@ mod tests {
     #[test]
     fn wrong_with_forged_pub_key() {
         let secret = PrivateKey::new(&mut OsRng);
-        let public = PublicKey::from(&[150; KEY_LENGTH]);
+        let public = PublicKey::from(&[255; KEY_LENGTH]);
         let msg = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec nec.";
         // One dot missing at the end
         let sig = secret.sign(msg, None).unwrap();
