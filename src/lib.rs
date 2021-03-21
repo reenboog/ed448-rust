@@ -237,3 +237,17 @@ fn shake256(items: Vec<&[u8]>, ctx: &[u8], pre_hash: PreHash) -> Box<[u8]> {
     }
     shake.finalize_boxed(114)
 }
+
+/// Common tasks for signing/verifying
+fn init_sig(ctx: Option<&[u8]>, pre_hash: PreHash, msg: &[u8]) -> Result<(Box<[u8]>, Vec<u8>)> {
+    let ctx = ctx.unwrap_or(b"");
+    if ctx.len() > 255 {
+        return Err(Ed448Error::ContextTooLong);
+    }
+    let msg = match pre_hash {
+        PreHash::False => msg.to_vec(),
+        PreHash::True => Shake256::default().chain(msg).finalize_boxed(64).to_vec(),
+    };
+
+    Ok((Box::from(ctx), msg))
+}

@@ -1,12 +1,9 @@
 use core::convert::TryFrom;
 
 use num_bigint::{BigInt, Sign};
-use sha3::{
-    digest::{ExtendableOutput, Update},
-    Shake256,
-};
 
 use crate::{
+    init_sig,
     point::Point,
     private_key::PrivateKey,
     {shake256, Ed448Error, PreHash, KEY_LENGTH, SIG_LENGTH},
@@ -52,11 +49,7 @@ impl PublicKey {
             return Err(Ed448Error::WrongSignatureLength);
         }
 
-        let ctx = ctx.unwrap_or(b"");
-        let msg = match pre_hash {
-            PreHash::False => msg.to_vec(),
-            PreHash::True => Shake256::default().chain(msg).finalize_boxed(64).to_vec(),
-        };
+        let (ctx, msg) = init_sig(ctx, pre_hash, msg)?;
 
         // Split signature into R and S, and parse.
         let (Rraw, Sraw) = sign.split_at(KEY_LENGTH);
@@ -74,7 +67,7 @@ impl PublicKey {
             return Err(Ed448Error::InvalidSignature);
         }
         // Calculate h.
-        let h = shake256(vec![Rraw, &self.as_byte(), &msg], ctx, pre_hash);
+        let h = shake256(vec![Rraw, &self.as_byte(), &msg], ctx.as_ref(), pre_hash);
         let h = BigInt::from_bytes_le(Sign::Plus, &h) % Point::l();
         // Calculate left and right sides of check eq.
         let mut rhs = R + (A * h);

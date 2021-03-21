@@ -7,7 +7,9 @@ use sha3::{
     Shake256,
 };
 
-use crate::{point::Point, shake256, Ed448Error, PreHash, PublicKey, KEY_LENGTH, SIG_LENGTH};
+use crate::{
+    init_sig, point::Point, shake256, Ed448Error, PreHash, PublicKey, KEY_LENGTH, SIG_LENGTH,
+};
 
 pub(crate) type PrivateKeyRaw = [u8; KEY_LENGTH];
 pub(crate) type SeedRaw = [u8; KEY_LENGTH];
@@ -146,26 +148,18 @@ impl PrivateKey {
         ctx: Option<&[u8]>,
         pre_hash: PreHash,
     ) -> crate::Result<[u8; SIG_LENGTH]> {
-        let ctx = ctx.unwrap_or(b"");
-        if ctx.len() > 255 {
-            return Err(Ed448Error::ContextTooLong);
-        }
-
-        let msg = match pre_hash {
-            PreHash::False => Box::from(msg),
-            PreHash::True => Shake256::default().chain(msg).finalize_boxed(64),
-        };
+        let (ctx, msg) = init_sig(ctx, pre_hash, msg)?;
         // Expand key.
         let (a, seed) = &self.expand();
         let a = BigInt::from_bytes_le(Sign::Plus, a);
         // Calculate r and R (R only used in encoded form).
-        let r = shake256(vec![seed, &msg], ctx, pre_hash);
+        let r = shake256(vec![seed, &msg], ctx.as_ref(), pre_hash);
         let r = BigInt::from_bytes_le(Sign::Plus, r.as_ref()) % Point::l();
         let R = (Point::default() * &r).encode();
         // Calculate h.
         let h = shake256(
             vec![&R, &PublicKey::from(a.clone()).as_byte(), &msg],
-            ctx,
+            ctx.as_ref(),
             pre_hash,
         );
         let h = BigInt::from_bytes_le(Sign::Plus, h.as_ref()) % Point::l();
