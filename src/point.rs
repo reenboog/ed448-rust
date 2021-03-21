@@ -341,16 +341,12 @@ impl Mul<BigInt> for Point {
 
     fn mul(mut self, mut x: BigInt) -> Self {
         let mut r = Point::new_stdbase();
-        let mut _r = r.to_string();
-        let mut _x = x.to_string();
         while !x.is_zero() {
             if !((&x % 2) as BigInt).is_zero() {
                 r = r + &self;
             }
             self = self.double();
             x /= 2;
-            _r = r.to_string();
-            _x = x.to_string();
         }
         r
     }
