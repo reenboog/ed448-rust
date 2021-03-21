@@ -213,6 +213,13 @@ mod tests {
     use rand_core::OsRng;
 
     #[test]
+    fn create_new_pkey() {
+        let pkey = PrivateKey::new(&mut OsRng);
+        let a = pkey.as_bytes();
+        assert_eq!(a.len(), KEY_LENGTH);
+    }
+
+    #[test]
     fn invalid_key_len() {
         let invalid_pk = PrivateKey::try_from(&[0x01_u8][..]);
         assert_eq!(invalid_pk.unwrap_err(), Ed448Error::WrongKeyLength);

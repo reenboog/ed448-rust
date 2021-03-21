@@ -176,6 +176,16 @@ mod tests {
     }
 
     #[test]
+    fn wrong_sign_length() {
+        let pubkey = PublicKey::from(&PrivateKey::new(&mut OsRng));
+        let sig = [0x01; SIG_LENGTH - 1];
+        assert_eq!(
+            pubkey.verify(b"message", &sig, None).unwrap_err(),
+            Ed448Error::WrongSignatureLength
+        );
+    }
+
+    #[test]
     fn instantiate_pubkey() {
         let pkey = PrivateKey::new(&mut OsRng);
         let pkey_slice = *pkey.as_bytes();
