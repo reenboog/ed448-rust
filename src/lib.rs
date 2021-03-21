@@ -236,9 +236,3 @@ fn shake256(items: Vec<&[u8]>, ctx: &[u8], pre_hash: PreHash) -> Box<[u8]> {
     }
     shake.finalize_boxed(114)
 }
-
-fn array_to_key(byte: &[u8]) -> [u8; KEY_LENGTH] {
-    let mut key = [0; KEY_LENGTH];
-    key.copy_from_slice(byte);
-    key
-}

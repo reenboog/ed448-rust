@@ -1,4 +1,5 @@
 use core::{
+    convert::TryInto,
     fmt,
     ops::{Add, Div, Mul, Neg, Sub},
 };
@@ -7,7 +8,7 @@ use lazy_static::lazy_static;
 use num_bigint::{BigInt, Sign};
 use num_traits::{One, Zero};
 
-use crate::{array_to_key, Ed448Error, KEY_LENGTH};
+use crate::{Ed448Error, KEY_LENGTH};
 
 lazy_static! {
     // 2 ^ 448 - 2 ^224 - 1
@@ -280,7 +281,7 @@ impl Point {
         // Encode y.
         let mut tmp = yp.0.magnitude().to_bytes_le();
         tmp.resize_with(KEY_LENGTH, Default::default);
-        let mut s = array_to_key(&tmp);
+        let mut s: [u8; KEY_LENGTH] = *&tmp.try_into().unwrap();
 
         // Add sign bit of x to encoding.
         if !xp.sign().is_zero() {

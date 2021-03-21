@@ -1,4 +1,4 @@
-use core::convert::TryFrom;
+use core::convert::{TryFrom, TryInto};
 
 use num_bigint::{BigInt, Sign};
 use rand_core::{CryptoRng, RngCore};
@@ -7,9 +7,7 @@ use sha3::{
     Shake256,
 };
 
-use crate::{
-    array_to_key, point::Point, shake256, Ed448Error, PreHash, PublicKey, KEY_LENGTH, SIG_LENGTH,
-};
+use crate::{point::Point, shake256, Ed448Error, PreHash, PublicKey, KEY_LENGTH, SIG_LENGTH};
 
 pub(crate) type PrivateKeyRaw = [u8; KEY_LENGTH];
 pub(crate) type SeedRaw = [u8; KEY_LENGTH];
@@ -63,7 +61,7 @@ impl PrivateKey {
             .chain(self.as_bytes())
             .finalize_boxed(114);
         //     Only the lower 57 bytes are used for generating the public key.
-        let mut s = array_to_key(&h[..KEY_LENGTH]);
+        let mut s: [u8; KEY_LENGTH] = *&h[..KEY_LENGTH].try_into().unwrap();
 
         // 2.  Prune the buffer: The two least significant bits of the first
         //     octet are cleared, all eight bits the last octet are cleared, and
@@ -72,7 +70,7 @@ impl PrivateKey {
         s[56] = 0;
         s[55] |= 0b1000_0000;
 
-        let seed = array_to_key(&h[KEY_LENGTH..]);
+        let seed: [u8; KEY_LENGTH] = *&h[KEY_LENGTH..].try_into().unwrap();
 
         (s, seed)
     }
@@ -174,13 +172,11 @@ impl PrivateKey {
         // Calculate s.
         let S = (r + h * a) % Point::l();
         // The final signature is a concatenation of R and S.
-        let mut S_ = S.magnitude().to_bytes_le();
-        S_.resize_with(KEY_LENGTH, Default::default);
-        let S = array_to_key(&S_);
+        let mut S = S.magnitude().to_bytes_le();
+        S.resize_with(KEY_LENGTH, Default::default);
+        let S: [u8; KEY_LENGTH] = *&S.try_into().unwrap();
 
-        let mut result = [0; SIG_LENGTH];
-        result.copy_from_slice(&[R, S].concat());
-        Ok(result)
+        Ok(*(&[R, S].concat().try_into().unwrap()))
     }
 }
 
@@ -205,7 +201,8 @@ impl TryFrom<&'_ [u8]> for PrivateKey {
         if bytes.len() != KEY_LENGTH {
             return Err(Ed448Error::WrongKeyLength);
         }
-        Ok(PrivateKey::from(array_to_key(bytes)))
+        let bytes: &[u8; KEY_LENGTH] = bytes.try_into().unwrap();
+        Ok(PrivateKey::from(bytes))
     }
 }
 
