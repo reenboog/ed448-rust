@@ -1,6 +1,5 @@
 use core::{
     convert::TryInto,
-    fmt,
     ops::{Add, Div, Mul, Neg, Sub},
 };
 
@@ -220,12 +219,6 @@ impl Div<&'_ Field> for &'_ Field {
     }
 }
 
-impl fmt::Display for Field {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&format!("Field {{ {} }}", self.0))
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct Point {
     x: Field,
@@ -407,14 +400,5 @@ impl Default for Point {
             y: yb.clone(),
             z: Field::new(BigInt::one()),
         }
-    }
-}
-
-impl fmt::Display for Point {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&format!(
-            "Point {{ x: {}, y: {}, z: {} }}",
-            self.x, self.y, self.z
-        ))
     }
 }
