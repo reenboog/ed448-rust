@@ -1,6 +1,6 @@
 [package]
 name = "ed448-rust"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Lolo_32 <lol.b@free.fr>"]
 edition = "2018"
 description = "Implementation of Edwards-Curve Digital Signature Algorithm (EdDSA) for ed448 only."
