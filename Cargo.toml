@@ -31,6 +31,8 @@ version = "0.9.1"
 
 [dependencies.subtle]
 version = "2.4.0"
+default-features = false
+features = ["std"]
 
 [dev-dependencies.base64]
 version = "0.13.0"
