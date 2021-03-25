@@ -49,8 +49,6 @@ impl PublicKey {
             return Err(Ed448Error::WrongSignatureLength);
         }
 
-        let (ctx, msg) = init_sig(ctx, pre_hash, msg)?;
-
         // Split signature into R and S, and parse.
         let (Rraw, Sraw) = sign.split_at(KEY_LENGTH);
         let (R, S) = (
@@ -67,7 +65,10 @@ impl PublicKey {
             return Err(Ed448Error::InvalidSignature);
         }
         // Calculate h.
-        let h = shake256(vec![Rraw, &self.as_byte(), &msg], ctx.as_ref(), pre_hash);
+        let h = {
+            let (ctx, msg) = init_sig(ctx, pre_hash, msg)?;
+            shake256(vec![Rraw, &self.as_byte(), &msg], ctx.as_ref(), pre_hash)
+        };
         let h = BigInt::from_bytes_le(Sign::Plus, &h) % Point::l();
         // Calculate left and right sides of check eq.
         let rhs = R + (A * h);

@@ -189,6 +189,7 @@ pub use crate::error::Ed448Error;
 
 pub use private_key::PrivateKey;
 pub use public_key::PublicKey;
+use std::borrow::Cow;
 
 mod error;
 mod point;
@@ -239,14 +240,21 @@ fn shake256(items: Vec<&[u8]>, ctx: &[u8], pre_hash: PreHash) -> Box<[u8]> {
 }
 
 /// Common tasks for signing/verifying
-fn init_sig(ctx: Option<&[u8]>, pre_hash: PreHash, msg: &[u8]) -> Result<(Box<[u8]>, Vec<u8>)> {
+fn init_sig<'a>(
+    ctx: Option<&[u8]>,
+    pre_hash: PreHash,
+    msg: &'a [u8],
+) -> Result<(Box<[u8]>, Cow<'a, [u8]>)> {
     let ctx = ctx.unwrap_or(b"");
     if ctx.len() > 255 {
         return Err(Ed448Error::ContextTooLong);
     }
     let msg = match pre_hash {
-        PreHash::False => msg.to_vec(),
-        PreHash::True => Shake256::default().chain(msg).finalize_boxed(64).to_vec(),
+        PreHash::False => Cow::Borrowed(msg),
+        PreHash::True => {
+            let hash = Shake256::default().chain(msg).finalize_boxed(64).to_vec();
+            Cow::Owned(hash)
+        }
     };
 
     Ok((Box::from(ctx), msg))
