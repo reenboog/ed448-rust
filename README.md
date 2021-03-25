@@ -1,8 +1,13 @@
 # Ed448-Rust
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 This is an implementation of Edwards-Curve Digital Signature Algorithm (EdDSA)
 from the [RFC8032](https://tools.ietf.org/html/rfc8032) in pure Rust,
 but only the ed448 support is implemented.
+
+It's a EdDSA for ed448 signing/verifying.
 
 _This is direct port of the Python code in the RFC, so it's the same warning
 as it:_
@@ -52,4 +57,7 @@ fn main () {
 
 ## License
 
-This code is licensed under MIT / Apache2.0
+This code is licensed under [MIT] / [Apache2.0]
+
+[MIT]: LICENSE_MIT.txt
+[Apache2.0]: LICENSE_APACHE2.txt
