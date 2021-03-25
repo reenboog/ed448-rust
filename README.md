@@ -1,5 +1,8 @@
 # Ed448-Rust
 
+[![Ci](https://github.com/lolo32/ed448-rust/actions/workflows/ci.yml/badge.svg)](https://github.com/lolo32/ed448-rust/actions/workflows/ci.yml)
+[![Security audit](https://github.com/lolo32/ed448-rust/actions/workflows/audit.yml/badge.svg)](https://github.com/lolo32/ed448-rust/actions/workflows/audit.yml)
+[![codecov](https://codecov.io/gh/lolo32/ed448-rust/branch/main/graph/badge.svg?token=V206OZ48AA)](https://codecov.io/gh/lolo32/ed448-rust)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
