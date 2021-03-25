@@ -8,6 +8,7 @@ use num_bigint::{BigInt, Sign};
 use num_traits::{One, Zero};
 
 use crate::{Ed448Error, KEY_LENGTH};
+use subtle::{Choice, ConstantTimeEq};
 
 lazy_static! {
     // 2 ^ 448 - 2 ^224 - 1
@@ -95,9 +96,23 @@ impl Field {
 }
 
 impl PartialEq for Field {
-    #[inline]
     fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0
+        fn sign_to_choice(sign: Sign) -> Choice {
+            match sign {
+                Sign::Plus => 1,
+                Sign::Minus => 0,
+                Sign::NoSign => unreachable!(),
+            }
+            .into()
+        }
+
+        let me = self.0.to_u64_digits();
+        let other = other.0.to_u64_digits();
+        let val = me.1.ct_eq(&other.1);
+        let sign_me = sign_to_choice(me.0);
+        let sign_other = sign_to_choice(other.0);
+        let sign = sign_me ^ sign_other;
+        (val & !sign).into()
     }
 }
 
