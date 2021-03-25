@@ -180,7 +180,7 @@
 //! use ed448_rust::{PublicKey, Ed448Error};
 //! # let private_key = ed448_rust::PrivateKey::new(&mut OsRng);
 //! let message = b"Signed message to verify";
-//! # let retrieve_signature = private_key.sign(message, None).unwrap();
+//! # let retrieve_signature = || private_key.sign(message, None).unwrap();
 //! # let retrieve_pubkey = || PublicKey::from(&private_key);
 //! let public_key = retrieve_pubkey(); // A slice or array of KEY_LENGTH byte length
 //! let signature = retrieve_signature(); // A slice or array of SIG_LENGTH byte length
