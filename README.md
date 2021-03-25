@@ -5,6 +5,7 @@
 [![codecov](https://codecov.io/gh/lolo32/ed448-rust/branch/main/graph/badge.svg?token=V206OZ48AA)](https://codecov.io/gh/lolo32/ed448-rust)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Docs.rs](https://docs.rs/ed448-rust/badge.svg)](https://docs.rs/ed448-rust/)
 
 This is an implementation of Edwards-Curve Digital Signature Algorithm (EdDSA)
 from the [RFC8032](https://tools.ietf.org/html/rfc8032) in pure Rust,
