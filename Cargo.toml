@@ -5,6 +5,7 @@ authors = ["Lolo_32 <lol.b@free.fr>"]
 edition = "2018"
 description = "Implementation of Edwards-Curve Digital Signature Algorithm (EdDSA) for ed448 only."
 license = "MIT/Apache-2.0"
+repository = "https://github.com/lolo32/ed448-rust"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
