@@ -34,6 +34,7 @@ opaque_debug::implement!(PublicKey);
 impl PublicKey {
     /// Convert the public key to an easily exportable format.
     #[inline]
+    #[must_use]
     pub fn as_byte(&self) -> [u8; 57] {
         // 4.  The public key A is the encoding of the point [s]B.
         self.0.encode()
@@ -69,7 +70,7 @@ impl PublicKey {
     /// }
     /// ```
     ///
-    /// # Error
+    /// # Errors
     ///
     /// * [`Ed448Error::InvalidSignature`] if the signature is not valid, either the public key
     ///   or the signature used are not the right, or the message has been altered.
@@ -83,6 +84,13 @@ impl PublicKey {
     /// Verify signature with public key. Message is pre-hashed before checked.
     ///
     /// See [`PublicKey::verify`] for more information.
+    ///
+    /// # Errors
+    ///
+    /// * [`Ed448Error::InvalidSignature`] if the signature is not valid, either the public key
+    ///   or the signature used are not the right, or the message has been altered.
+    /// * [`Ed448Error::ContextTooLong`] if the optional context is more than 255 byte length.
+    /// * [`Ed448Error::WrongSignatureLength`] if the signature is not `SIG_LENGTH` byte.
     #[inline]
     pub fn verify_ph(&self, msg: &[u8], sign: &[u8], ctx: Option<&[u8]>) -> crate::Result<()> {
         self.verify_real(msg, sign, ctx, PreHash::True)
@@ -103,15 +111,11 @@ impl PublicKey {
         // Split signature into R and S, and parse.
         let (Rraw, Sraw) = sign.split_at(KEY_LENGTH);
         let (R, S) = (
-            Point::default()
-                .decode(Rraw)
-                .map_err(|_| Ed448Error::InvalidSignature)?,
+            Point::decode(Rraw).map_err(|_| Ed448Error::InvalidSignature)?,
             BigInt::from_bytes_le(Sign::Plus, Sraw),
         );
         // Parse public key.
-        let A = Point::default()
-            .decode(&self.as_byte())
-            .map_err(|_| Ed448Error::InvalidSignature)?;
+        let A = Point::decode(&self.as_byte()).map_err(|_| Ed448Error::InvalidSignature)?;
         if &S >= Point::l() {
             return Err(Ed448Error::InvalidSignature);
         }
@@ -140,7 +144,7 @@ impl From<&PrivateKey> for PublicKey {
         let (s, _) = &private_key.expand();
         // 3.  Interpret the buffer as the little-endian integer, forming a
         //     secret scalar s.
-        PublicKey::from(BigInt::from_bytes_le(Sign::Plus, s))
+        Self::from(BigInt::from_bytes_le(Sign::Plus, s))
     }
 }
 
@@ -153,7 +157,7 @@ impl From<BigInt> for PublicKey {
         let A = Point::default() * s;
 
         // 4.  The public key A is the encoding of the point [s]B.
-        PublicKey(A)
+        Self(A)
     }
 }
 

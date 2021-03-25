@@ -25,7 +25,9 @@ use crate::{
     init_sig, point::Point, shake256, Ed448Error, PreHash, PublicKey, KEY_LENGTH, SIG_LENGTH,
 };
 
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) type PrivateKeyRaw = [u8; KEY_LENGTH];
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) type SeedRaw = [u8; KEY_LENGTH];
 
 /// This represent a private key. **Must be kept secret.**
@@ -66,7 +68,8 @@ impl PrivateKey {
     /// let exportable_pkey = private_key.as_bytes();
     /// ```
     #[inline]
-    pub fn as_bytes(&self) -> &[u8; KEY_LENGTH] {
+    #[must_use]
+    pub const fn as_bytes(&self) -> &[u8; KEY_LENGTH] {
         &self.0
     }
 
@@ -77,7 +80,7 @@ impl PrivateKey {
             .chain(self.as_bytes())
             .finalize_boxed(114);
         //     Only the lower 57 bytes are used for generating the public key.
-        let mut s: [u8; KEY_LENGTH] = *&h[..KEY_LENGTH].try_into().unwrap();
+        let mut s: [u8; KEY_LENGTH] = h[..KEY_LENGTH].try_into().unwrap();
 
         // 2.  Prune the buffer: The two least significant bits of the first
         //     octet are cleared, all eight bits the last octet are cleared, and
@@ -86,7 +89,7 @@ impl PrivateKey {
         s[56] = 0;
         s[55] |= 0b1000_0000;
 
-        let seed: [u8; KEY_LENGTH] = *&h[KEY_LENGTH..].try_into().unwrap();
+        let seed: [u8; KEY_LENGTH] = h[KEY_LENGTH..].try_into().unwrap();
 
         (s, seed)
     }
@@ -136,7 +139,7 @@ impl PrivateKey {
     /// );
     /// ```
     ///
-    /// # Error
+    /// # Errors
     ///
     /// * [`Ed448Error::ContextTooLong`] if the context is more than 255 byte length.
     #[inline]
@@ -150,6 +153,10 @@ impl PrivateKey {
     /// case is always 64 bytes length.
     ///
     /// See [`PrivateKey::sign`].
+    ///
+    /// # Errors
+    ///
+    /// * [`Ed448Error::ContextTooLong`] if the context is more than 255 byte length.
     #[inline]
     pub fn sign_ph(&self, msg: &[u8], ctx: Option<&[u8]>) -> crate::Result<[u8; SIG_LENGTH]> {
         self.sign_real(msg, ctx, PreHash::True)
@@ -181,9 +188,9 @@ impl PrivateKey {
         // The final signature is a concatenation of R and S.
         let mut S = S.magnitude().to_bytes_le();
         S.resize_with(KEY_LENGTH, Default::default);
-        let S: [u8; KEY_LENGTH] = *&S.try_into().unwrap();
+        let S: [u8; KEY_LENGTH] = S.try_into().unwrap();
 
-        Ok(*(&[R, S].concat().try_into().unwrap()))
+        Ok([R, S].concat().try_into().unwrap())
     }
 }
 
@@ -209,14 +216,14 @@ impl TryFrom<&'_ [u8]> for PrivateKey {
             return Err(Ed448Error::WrongKeyLength);
         }
         let bytes: &[u8; KEY_LENGTH] = bytes.try_into().unwrap();
-        Ok(PrivateKey::from(bytes))
+        Ok(Self::from(bytes))
     }
 }
 
 impl From<&'_ PrivateKeyRaw> for PrivateKey {
     #[inline]
     fn from(bytes: &PrivateKeyRaw) -> Self {
-        PrivateKey::from(*bytes)
+        Self::from(*bytes)
     }
 }
 

@@ -88,12 +88,12 @@ impl Field {
 
     /// Field square root.  Returns none if square root does not exist.
     /// Note: not presently implemented for p mod 8 = 1 case.
-    pub fn sqrt(self) -> crate::Result<Field> {
+    pub fn sqrt(self) -> crate::Result<Self> {
         // Compute candidate square root.
         let y = self
             .0
             .modpow(&((&p as &BigInt).add(1_u32).div(&4)), &p as &BigInt);
-        let y = Field::new(y);
+        let y = Self::new(y);
         // Check square root candidate valid.
         if &y * &y == self {
             Ok(y)
@@ -139,7 +139,7 @@ impl Add for Field {
     }
 }
 
-impl Add<&'_ Field> for Field {
+impl Add<&'_ Self> for Field {
     type Output = Self;
 
     #[inline]
@@ -166,7 +166,7 @@ impl Sub for Field {
     }
 }
 
-impl Sub<&'_ Field> for Field {
+impl Sub<&'_ Self> for Field {
     type Output = Self;
 
     #[inline]
@@ -193,7 +193,7 @@ impl Mul for Field {
     }
 }
 
-impl Mul<&'_ Field> for Field {
+impl Mul<&'_ Self> for Field {
     type Output = Self;
 
     #[inline]
@@ -230,7 +230,7 @@ impl Div for Field {
 }
 
 #[allow(clippy::suspicious_arithmetic_impl)]
-impl Div<&'_ Field> for Field {
+impl Div<&'_ Self> for Field {
     type Output = Self;
 
     #[inline]
@@ -262,7 +262,7 @@ impl Point {
             Ok(Self {
                 x: x.clone(),
                 y: y.clone(),
-                ..Default::default()
+                ..Self::default()
             })
         } else {
             Err(Ed448Error::InvalidPoint)
@@ -303,7 +303,7 @@ impl Point {
         // Encode y.
         let mut tmp = yp.0.magnitude().to_bytes_le();
         tmp.resize_with(KEY_LENGTH, Default::default);
-        let mut s: [u8; KEY_LENGTH] = *&tmp.try_into().unwrap();
+        let mut s: [u8; KEY_LENGTH] = tmp.try_into().unwrap();
 
         // Add sign bit of x to encoding.
         if !xp.sign().is_zero() {
@@ -313,14 +313,14 @@ impl Point {
     }
 
     /// Decode a point representation.
-    pub fn decode(self, s: &[u8]) -> crate::Result<Point> {
+    pub fn decode(s: &[u8]) -> crate::Result<Self> {
         // Extract signbit.
         let xs = BigInt::from(s[56] >> 7);
         // Decode y.  If this fails, fail.
-        let y = self.frombytes(s)?;
+        let y = Self::frombytes(s)?;
         // Try to recover x.  If it does not exist, or if zero and xs
         // are wrong, fail.
-        let mut x = self.solve_x2(&y).sqrt()?;
+        let mut x = Self::solve_x2(&y).sqrt()?;
         if x.is_zero() && xs != x.sign() {
             return Err(Ed448Error::InvalidPoint);
         }
@@ -329,11 +329,11 @@ impl Point {
             x = -x;
         }
         // Return the constructed point.
-        Point::new(&x, &y)
+        Self::new(&x, &y)
     }
 
     /// Unserialize number from bits.
-    fn frombytes(&self, x: &[u8]) -> crate::Result<Field> {
+    fn frombytes(x: &[u8]) -> crate::Result<Field> {
         let rv = BigInt::from_bytes_le(Sign::Plus, x) % BigInt::from(2).pow(455);
         if &rv < &p as &BigInt {
             Ok(Field::new(rv))
@@ -344,7 +344,7 @@ impl Point {
 
     /// Solve for x^2.
     #[inline]
-    fn solve_x2(self, y: &Field) -> Field {
+    fn solve_x2(y: &Field) -> Field {
         (y * y - &f1 as &Field) / (&d as &Field * y * y - &f1 as &Field)
     }
 }
@@ -362,7 +362,7 @@ impl Mul<BigInt> for Point {
     type Output = Self;
 
     fn mul(mut self, mut x: BigInt) -> Self {
-        let mut r = Point::new_stdbase();
+        let mut r = Self::new_stdbase();
         while !x.is_zero() {
             if !((&x % 2) as BigInt).is_zero() {
                 r = r + &self;
@@ -391,11 +391,11 @@ impl Add for Point {
     }
 }
 
-impl Add<&'_ Point> for Point {
+impl Add<&'_ Self> for Point {
     type Output = Self;
 
     #[inline]
-    fn add(self, other: &Point) -> Self {
+    fn add(self, other: &Self) -> Self {
         self + other.clone()
     }
 }
@@ -409,8 +409,8 @@ impl Add<&'_ Point> for &'_ Point {
     }
 }
 
-impl PartialEq<Point> for Point {
-    fn eq(&self, other: &Point) -> bool {
+impl PartialEq<Self> for Point {
+    fn eq(&self, other: &Self) -> bool {
         // Need to check x1/z1 == x2/z2 and similarly for y, so cross
         // multiply to eliminate divisions.
         let xn1 = &self.x * &other.z;

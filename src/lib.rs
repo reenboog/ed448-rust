@@ -250,6 +250,7 @@ impl From<PreHash> for u8 {
 
 /// Produce a Shake256 for signing/verifying signatures
 fn shake256(items: Vec<&[u8]>, ctx: &[u8], pre_hash: PreHash) -> Box<[u8]> {
+    #[allow(clippy::cast_possible_truncation)]
     let mut shake = Shake256::default()
         .chain(b"SigEd448")
         .chain(&[pre_hash.into(), ctx.len() as u8])
@@ -261,15 +262,18 @@ fn shake256(items: Vec<&[u8]>, ctx: &[u8], pre_hash: PreHash) -> Box<[u8]> {
 }
 
 /// Common tasks for signing/verifying
-fn init_sig<'a>(
-    ctx: Option<&[u8]>,
+#[allow(clippy::type_complexity)]
+fn init_sig<'a, 'b>(
+    ctx: Option<&'b [u8]>,
     pre_hash: PreHash,
     msg: &'a [u8],
-) -> Result<(Box<[u8]>, Cow<'a, [u8]>)> {
+) -> Result<(Cow<'b, [u8]>, Cow<'a, [u8]>)> {
     let ctx = ctx.unwrap_or(b"");
     if ctx.len() > 255 {
         return Err(Ed448Error::ContextTooLong);
     }
+    let ctx = Cow::Borrowed(ctx);
+
     let msg = match pre_hash {
         PreHash::False => Cow::Borrowed(msg),
         PreHash::True => {
@@ -278,5 +282,5 @@ fn init_sig<'a>(
         }
     };
 
-    Ok((Box::from(ctx), msg))
+    Ok((ctx, msg))
 }
