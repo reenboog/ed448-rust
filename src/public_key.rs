@@ -40,12 +40,49 @@ impl PublicKey {
     }
 
     /// Verify signature with public key.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use rand_core::OsRng;
+    /// use ed448_rust::{PublicKey, Ed448Error};
+    /// # let private_key = ed448_rust::PrivateKey::new(&mut OsRng);
+    /// let message = b"Signed message to verify";
+    /// # let retrieve_signature = || private_key.sign(message, None).unwrap();
+    /// # let retrieve_pubkey = || PublicKey::from(&private_key);
+    /// let public_key = retrieve_pubkey();
+    /// let signature = retrieve_signature();
+    /// match public_key.verify(message, &signature, None) {
+    ///     Ok(()) => {
+    ///         // Signature OK, use the message
+    ///     }
+    ///     Err(Ed448Error::InvalidSignature) => {
+    ///         // The verification of the signature is invalid
+    ///     }
+    ///     Err(Ed448Error::ContextTooLong) => {
+    ///         // The used context is more than 255 bytes length
+    ///     }
+    ///     Err(Ed448Error::WrongSignatureLength) => {
+    ///         // The signature is not 144 bytes length
+    ///     }
+    ///     Err(_) => unreachable!()
+    /// }
+    /// ```
+    ///
+    /// # Error
+    ///
+    /// * [`Ed448Error::InvalidSignature`] if the signature is not valid, either the public key
+    ///   or the signature used are not the right, or the message has been altered.
+    /// * [`Ed448Error::ContextTooLong`] if the optional context is more than 255 byte length.
+    /// * [`Ed448Error::WrongSignatureLength`] if the signature is not `SIG_LENGTH` byte.
     #[inline]
     pub fn verify(&self, msg: &[u8], sign: &[u8], ctx: Option<&[u8]>) -> crate::Result<()> {
         self.verify_real(msg, sign, ctx, PreHash::False)
     }
 
     /// Verify signature with public key. Message is pre-hashed before checked.
+    ///
+    /// See [`PublicKey::verify`] for more information.
     #[inline]
     pub fn verify_ph(&self, msg: &[u8], sign: &[u8], ctx: Option<&[u8]>) -> crate::Result<()> {
         self.verify_real(msg, sign, ctx, PreHash::True)

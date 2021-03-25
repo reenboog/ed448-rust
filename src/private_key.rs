@@ -138,8 +138,7 @@ impl PrivateKey {
     ///
     /// # Error
     ///
-    /// It could return [`Ed448Error::ContextTooLong`] if the context is more than
-    /// 255 byte length.
+    /// * [`Ed448Error::ContextTooLong`] if the context is more than 255 byte length.
     #[inline]
     pub fn sign(&self, msg: &[u8], ctx: Option<&[u8]>) -> crate::Result<[u8; SIG_LENGTH]> {
         self.sign_real(msg, ctx, PreHash::False)

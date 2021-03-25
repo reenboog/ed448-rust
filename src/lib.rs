@@ -180,15 +180,22 @@
 //! use ed448_rust::{PublicKey, Ed448Error};
 //! # let private_key = ed448_rust::PrivateKey::new(&mut OsRng);
 //! let message = b"Signed message to verify";
-//! # let signature = private_key.sign(message, None).unwrap();
+//! # let retrieve_signature = private_key.sign(message, None).unwrap();
 //! # let retrieve_pubkey = || PublicKey::from(&private_key);
-//! let public_key = retrieve_pubkey();
+//! let public_key = retrieve_pubkey(); // A slice or array of KEY_LENGTH byte length
+//! let signature = retrieve_signature(); // A slice or array of SIG_LENGTH byte length
 //! match public_key.verify(message, &signature, None) {
 //!     Ok(()) => {
 //!         // Signature OK, use the message
 //!     }
 //!     Err(Ed448Error::InvalidSignature) => {
 //!         // The verification of the signature is invalid
+//!     }
+//!     Err(Ed448Error::ContextTooLong) => {
+//!         // The used context is more than 255 bytes length
+//!     }
+//!     Err(Ed448Error::WrongSignatureLength) => {
+//!         // The signature is not 144 bytes length
 //!     }
 //!     Err(_) => unreachable!()
 //! }
