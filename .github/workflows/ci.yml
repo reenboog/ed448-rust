@@ -43,11 +43,11 @@ jobs:
         with:
           command: check
 
-      - name: Run cargo check with all features
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --all-features
+      # - name: Run cargo check with all features
+      #   uses: actions-rs/cargo@v1
+      #   with:
+      #     command: check
+      #     args: --all-features
 
   clippy_and_fmt:
     # The type of runner that the job will run on
@@ -168,4 +168,4 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release --all-features
+          args: --release
