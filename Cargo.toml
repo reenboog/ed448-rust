@@ -9,6 +9,9 @@ repository = "https://github.com/lolo32/ed448-rust"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+docinclude = [] # Used only for activating `doc(include="...")` on stable.
+
 [dependencies.lazy_static]
 version = "1.4.0"
 
@@ -46,3 +49,7 @@ version = "0.4.3"
 [dev-dependencies.rand_core]
 version = "0.6.2"
 features = ["getrandom"]
+
+[package.metadata.docs.rs]
+rustc-args = ["--cfg", "docsrs"]
+features = ["docinclude"] # Activate `docinclude` during docs.rs build.

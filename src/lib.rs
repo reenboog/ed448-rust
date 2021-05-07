@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//#![feature(external_doc)]
+#![cfg_attr(feature = "docinclude", feature(external_doc))]
 #![deny(
     missing_docs,
     missing_copy_implementations,
@@ -217,9 +217,14 @@ mod point;
 mod private_key;
 mod public_key;
 
-//#[doc(include = "../README.md")]
-//#[cfg(doctest)]
-//pub struct ReadmeDoctests;
+#[allow(
+    missing_docs,
+    missing_copy_implementations,
+    missing_debug_implementations
+)]
+#[doc(hidden)]
+#[cfg_attr(feature = "docinclude", doc(include = "../README.md"))]
+pub struct ReadmeDoctests;
 
 /// Specialized [`Result`](core::result::Result) for this crate.
 pub type Result<T> = core::result::Result<T, Ed448Error>;
