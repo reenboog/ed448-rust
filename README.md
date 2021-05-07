@@ -6,6 +6,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docs.rs](https://docs.rs/ed448-rust/badge.svg)](https://docs.rs/ed448-rust/)
+[![Crates.io](https://img.shields.io/crates/v/ed448-rust)](https://crates.io/crates/ed448-rust)
 
 This is an implementation of Edwards-Curve Digital Signature Algorithm (EdDSA)
 from the [RFC8032](https://tools.ietf.org/html/rfc8032) in pure Rust,
@@ -16,9 +17,9 @@ It's a EdDSA for ed448 signing/verifying.
 _This is direct port of the Python code in the RFC, so it's the same warning
 as it:_
 
-> **Note: This code is not intended for production.  Although it should**
-> **produce correct results for every input, it is slow and makes no**
-> **attempt to avoid side-channel attacks.**
+> _**Note: This code is not intended for production.  Although it should**_
+> _**produce correct results for every input, it is slow and makes no**_
+> _**attempt to avoid side-channel attacks.**_
 
 ## Usage
 
