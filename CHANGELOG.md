@@ -1,3 +1,8 @@
+## v0.1.2 - upcoming
+
+* A feature was added to include [README.md](./README.md) during the tests to check examples in the usage.
+
+
 ## v0.1.1
 
 * Add clippy directives
