@@ -178,7 +178,7 @@ impl PrivateKey {
         let R = (Point::default() * &r).encode();
         // Calculate h.
         let h = shake256(
-            vec![&R, &PublicKey::from(a.clone()).as_byte(), &msg],
+            vec![&R, &PublicKey::from(self).as_bytes(), &msg],
             ctx.as_ref(),
             pre_hash,
         );
