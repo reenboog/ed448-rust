@@ -157,7 +157,7 @@ fn ed448() {
 
         let pkey = PrivateKey::try_from(&pkey[..]).unwrap();
         let pub_k = PublicKey::from(&pkey);
-        assert_eq!(&pub_k.as_byte()[..], &pub_key[..]);
+        assert_eq!(&pub_k.as_bytes()[..], &pub_key[..]);
 
         let sig_ = pkey.sign(&msg, context.as_deref()).unwrap();
         assert_eq!(&sig_[..], &sig[..]);
@@ -205,7 +205,7 @@ fn ed448ph() {
 
         let pkey = PrivateKey::try_from(&pkey[..]).unwrap();
         let pub_k = PublicKey::from(&pkey);
-        assert_eq!(&pub_k.as_byte()[..], &pub_key[..]);
+        assert_eq!(&pub_k.as_bytes()[..], &pub_key[..]);
 
         let sig_ = pkey.sign_ph(&msg, context.as_deref()).unwrap();
         assert_eq!(&sig_[..], &sig[..]);

@@ -35,7 +35,7 @@ impl PublicKey {
     /// Convert the public key to an easily exportable format.
     #[inline]
     #[must_use]
-    pub fn as_byte(&self) -> [u8; 57] {
+    pub fn as_bytes(&self) -> [u8; 57] {
         // 4.  The public key A is the encoding of the point [s]B.
         self.0.encode()
     }
@@ -115,14 +115,14 @@ impl PublicKey {
             BigInt::from_bytes_le(Sign::Plus, Sraw),
         );
         // Parse public key.
-        let A = Point::decode(&self.as_byte()).map_err(|_| Ed448Error::InvalidSignature)?;
+        let A = Point::decode(&self.as_bytes()).map_err(|_| Ed448Error::InvalidSignature)?;
         if &S >= Point::l() {
             return Err(Ed448Error::InvalidSignature);
         }
         // Calculate h.
         let h = {
             let (ctx, msg) = init_sig(ctx, pre_hash, msg)?;
-            shake256(vec![Rraw, &self.as_byte(), &msg], ctx.as_ref(), pre_hash)
+            shake256(vec![Rraw, &self.as_bytes(), &msg], ctx.as_ref(), pre_hash)
         };
         let h = BigInt::from_bytes_le(Sign::Plus, &h) % Point::l();
         // Calculate left and right sides of check eq.
@@ -144,52 +144,27 @@ impl From<&PrivateKey> for PublicKey {
         let (s, _) = &private_key.expand();
         // 3.  Interpret the buffer as the little-endian integer, forming a
         //     secret scalar s.
-        Self::from(BigInt::from_bytes_le(Sign::Plus, s))
-    }
-}
+        let bi = BigInt::from_bytes_le(Sign::Plus, s);
+        let A = Point::default() * bi;
 
-/// Do not use, it's for internal use only to generate the PublicKey
-#[doc(hidden)]
-impl From<BigInt> for PublicKey {
-    #[inline]
-    fn from(s: BigInt) -> Self {
-        //     Perform a known-base-point scalar multiplication [s]B.
-        let A = Point::default() * s;
-
-        // 4.  The public key A is the encoding of the point [s]B.
         Self(A)
     }
 }
 
-impl From<[u8; KEY_LENGTH]> for PublicKey {
-    #[inline]
-    fn from(array: [u8; KEY_LENGTH]) -> Self {
-        Self::from(BigInt::from_bytes_le(Sign::Plus, &array))
-    }
-}
-
-impl From<&'_ [u8; KEY_LENGTH]> for PublicKey {
-    #[inline]
-    fn from(array: &'_ [u8; KEY_LENGTH]) -> Self {
-        Self::from(BigInt::from_bytes_le(Sign::Plus, array))
-    }
-}
-
-impl TryFrom<&[u8]> for PublicKey {
+impl TryFrom<&[u8; KEY_LENGTH]> for PublicKey {
     type Error = Ed448Error;
 
     #[inline]
-    fn try_from(array: &[u8]) -> Result<Self, Self::Error> {
-        if array.len() != KEY_LENGTH {
-            return Err(Ed448Error::WrongPublicKeyLength);
-        }
-        Ok(Self::from(BigInt::from_bytes_le(Sign::Plus, array)))
+    fn try_from(array: &[u8; KEY_LENGTH]) -> Result<Self, Self::Error> {
+        let point = Point::decode(array)?;
+
+        Ok(Self(point))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::convert::TryFrom;
+    use std::convert::{TryFrom, TryInto};
 
     use super::*;
     use rand_core::OsRng;
@@ -201,7 +176,7 @@ mod tests {
                 528c8a3fcc2f044e39a3fc5b94492f8f032e7549a20098f95b",
         )
         .unwrap();
-        let ref_public = hex::decode(
+        let public_vec = hex::decode(
             "5fd7449b59b461fd2ce787ec616ad46a1da1342485a70e1f8a0ea75d80e96778\
                 edf124769b46c7061bd6783df1e50f6cd1fa1abeafe8256180",
         )
@@ -210,7 +185,24 @@ mod tests {
         let secret = PrivateKey::try_from(&secret_vec[..]).unwrap();
         let public = PublicKey::from(&secret);
 
-        assert_eq!(&public.as_byte()[..], &ref_public[..]);
+        assert_eq!(&public.as_bytes(), &public_vec[..]);
+
+        let public_slice: [u8; KEY_LENGTH] = public_vec.try_into().unwrap();
+        let public_restored = PublicKey::try_from(&public_slice).unwrap();
+
+        assert_eq!(&public_restored.as_bytes(), &public_slice);
+    }
+
+    #[test]
+    fn fail_for_invalid_point() {
+        let p: [u8; KEY_LENGTH] = hex::decode(
+            "0000000000000000000000000000000000000000000000000000000000000000\
+            00000000000000000000000000000000000000000000000001")
+        .unwrap()
+        .try_into()
+        .unwrap();
+
+        assert!(PublicKey::try_from(&p).is_err());
     }
 
     #[test]
@@ -226,12 +218,6 @@ mod tests {
     }
 
     #[test]
-    fn wrong_pubkey_length() {
-        let pub_key = PublicKey::try_from(&[0x01_u8][..]);
-        assert_eq!(pub_key.unwrap_err(), Ed448Error::WrongPublicKeyLength);
-    }
-
-    #[test]
     fn wrong_sign_length() {
         let pubkey = PublicKey::from(&PrivateKey::new(&mut OsRng));
         let sig = [0x01; SIG_LENGTH - 1];
@@ -239,16 +225,6 @@ mod tests {
             pubkey.verify(b"message", &sig, None).unwrap_err(),
             Ed448Error::WrongSignatureLength
         );
-    }
-
-    #[test]
-    fn instantiate_pubkey() {
-        let pkey = PrivateKey::new(&mut OsRng);
-        let pkey_slice = *pkey.as_bytes();
-        let pub_key1 = PublicKey::from(&pkey_slice);
-        let pub_key2 = PublicKey::from(pkey_slice);
-
-        assert_eq!(pub_key1.as_byte(), pub_key2.as_byte());
     }
 
     #[test]
@@ -261,19 +237,6 @@ mod tests {
         let sig = secret.sign(msg_1, None).unwrap();
         assert_eq!(
             public.verify(msg_2, &sig, None).unwrap_err(),
-            Ed448Error::InvalidSignature
-        );
-    }
-
-    #[test]
-    fn wrong_with_forged_pub_key() {
-        let secret = PrivateKey::new(&mut OsRng);
-        let public = PublicKey::from(&[255; KEY_LENGTH]);
-        let msg = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec nec.";
-        // One dot missing at the end
-        let sig = secret.sign(msg, None).unwrap();
-        assert_eq!(
-            public.verify(msg, &sig, None).unwrap_err(),
             Ed448Error::InvalidSignature
         );
     }
